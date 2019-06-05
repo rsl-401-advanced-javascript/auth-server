@@ -3,7 +3,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const uuid = require('uuid');
 
 const users = new mongoose.Schema({
   username: {
@@ -22,14 +21,10 @@ const users = new mongoose.Schema({
     type: String,
     default: 'user',
     enum: ['admin', 'editor', 'user']
-  },
-  secret: {
-    type: String
   }
 });
 
 users.pre('save', function (next) {
-  this.secret = new uuid();
   bcrypt.hash(this.password, 10)
     .then(hashedPassword => {
       this.password = hashedPassword;
@@ -94,30 +89,14 @@ users.methods.comparePassword = function (password) {
     .then(valid => valid ? this : null);
 };
 
-users.methods.generateToken = async function (type) {
+users.methods.generateToken = function (type) {
 
   let token = {
     id: this._id,
     role: this.role,
   };
 
-  switch (type) {
-    case 'short-term':
-      return jwt.sign(token, process.env.SECRET, {
-        expiresIn: 60 * 15
-      });
-    case 'one-time':
-      let updatedUser = await this.updateOne({
-        _id: this.id
-      }, {
-        secret: new uuid()
-      });
-      return jwt.sign(token, updatedUser.secret)
-    default:
-      return jwt.sign(token, process.env.SECRET);
-  }
-
-
+  return jwt.sign(token, process.env.SECRET);
 };
 
 module.exports = mongoose.model('users', users);
