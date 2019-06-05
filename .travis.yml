@@ -12,7 +12,7 @@ branches:
 services:
   - mongodb
 env:
-  - MONGODB_URI="mongodb://localhost/authentication"
+  - MONGODB_URI="mongodb://localhost/auth-server"
 notifications:
   email:
     - false
